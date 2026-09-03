@@ -50,8 +50,7 @@ def main():
     args = ap.parse_args()
 
     tags = args.tags.split(",")
-    labels = [s.strip() for s in args.labels.split('","')]
-    labels = [s.strip('"') for s in labels]
+    labels = [s.strip().strip('"') for s in args.labels.split(",")]
     assert len(tags) == len(labels), f"{len(tags)} tags vs {len(labels)} labels"
 
     out_lines = [
