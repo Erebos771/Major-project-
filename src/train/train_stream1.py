@@ -27,6 +27,7 @@ SEED = 42
 BATCH_SIZE = 32
 MAX_EPOCHS = 25
 PATIENCE = 5
+MIN_EPOCHS = 10  # don't allow early stopping before this; cosine LR is still high/noisy early on
 LR_MAX = 1e-3
 LR_MIN = 1e-5
 VAL_FRAC = 0.10
@@ -147,7 +148,7 @@ def main():
             torch.save(model.state_dict(), best_path)
         else:
             epochs_no_improve += 1
-            if epochs_no_improve >= PATIENCE:
+            if epochs_no_improve >= PATIENCE and epoch >= MIN_EPOCHS:
                 print(f"Early stopping at epoch {epoch} (no val_loss improvement for {PATIENCE} epochs).")
                 break
 
