@@ -1,0 +1,16 @@
+torch>=2.2
+torchvision>=0.17
+transformers>=4.40
+open_clip_torch
+numpy
+pandas
+scikit-learn
+scikit-image
+opencv-python-headless
+Pillow
+matplotlib
+seaborn
+tqdm
+albumentations
+grad-cam
+pyyaml
