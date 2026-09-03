@@ -3,7 +3,7 @@ CPU work (sliding-window GLCM, CLIP forward passes) every epoch.
 
 Writes, for each split (train/test):
   data/processed/features/<split>/veg.npy       (N, 9, 224, 224) float32
-  data/processed/features/<split>/texture.npy   (N, 12, 224, 224) float32
+  data/processed/features/<split>/texture.npy   (N, 12, TEXTURE_RES, TEXTURE_RES) float16
   data/processed/features/<split>/clip.npy      (N, 512) float32
   data/processed/features/<split>/labels.npy    (N,) int64  (order matches manifest rows for that split)
 
@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 from PIL import Image
@@ -25,6 +26,7 @@ from src.data.texture_features import compute_texture_stack
 from src.data.vegetation_features import compute_vegetation_stack
 
 OUT_DIR = Path("data/processed/features")
+TEXTURE_RES = 56  # texture branch downsamples 224->56 internally anyway; see note below
 
 
 def get_device() -> torch.device:
@@ -58,11 +60,17 @@ def precompute_veg_texture(split: str, which: set[str]) -> None:
     if "texture" in which:
         tex_path = out_dir / "texture.npy"
         if not tex_path.exists():
-            tex_arr = np.zeros((len(items), 12, 224, 224), dtype=np.float32)
+            # Stored at TEXTURE_RES (not 224) and in float16: the texture branch downsamples
+            # 224->56 internally via two maxpools anyway, and GLCM maps are already coarse
+            # (computed on a 16x16 window grid then upsampled) — storing at full 224 float32
+            # made the cache huge (9.2GB/split) and turned every epoch's shuffled reads into a
+            # random-I/O bottleneck (~10 min/epoch instead of ~3). This cuts the cache ~30x.
+            tex_arr = np.zeros((len(items), 12, TEXTURE_RES, TEXTURE_RES), dtype=np.float16)
             for i, (path, _) in enumerate(tqdm(items, desc=f"[{split}] texture")):
                 img = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32) / 255.0
-                stack = compute_texture_stack(img)  # HWC
-                tex_arr[i] = stack.transpose(2, 0, 1)
+                stack = compute_texture_stack(img)  # HWC, 224x224
+                stack = cv2.resize(stack, (TEXTURE_RES, TEXTURE_RES), interpolation=cv2.INTER_AREA)
+                tex_arr[i] = stack.transpose(2, 0, 1).astype(np.float16)
             np.save(tex_path, tex_arr)
         else:
             print(f"[{split}] texture.npy exists, skipping")

@@ -55,7 +55,8 @@ class MultiStreamDataset(Dataset):
         if "veg" in self.streams:
             out["veg"] = torch.from_numpy(np.asarray(self.cache["veg"][idx]))
         if "texture" in self.streams:
-            out["texture"] = torch.from_numpy(np.asarray(self.cache["texture"][idx]))
+            # cached as float16 to keep the on-disk/mmap footprint small; upcast for the conv branch.
+            out["texture"] = torch.from_numpy(np.asarray(self.cache["texture"][idx], dtype=np.float32))
         if "clip" in self.streams:
             out["clip"] = torch.from_numpy(np.asarray(self.cache["clip"][idx]))
         label = int(self.labels[idx])
