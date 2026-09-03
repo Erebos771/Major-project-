@@ -28,7 +28,10 @@ class ClipEncoder:
     @torch.no_grad()
     def encode_pil_batch(self, pil_images: list) -> np.ndarray:
         inputs = self.processor(images=pil_images, return_tensors="pt").to(self.device)
-        feats = self.model.get_image_features(**inputs)
+        out = self.model.get_image_features(**inputs)
+        # Some transformers versions return a raw (B, 512) tensor, others a
+        # BaseModelOutputWithPooling whose .pooler_output is the CLIP image embedding.
+        feats = out.pooler_output if hasattr(out, "pooler_output") else out
         feats = feats / feats.norm(dim=-1, keepdim=True)
         return feats.cpu().numpy().astype(np.float32)
 
