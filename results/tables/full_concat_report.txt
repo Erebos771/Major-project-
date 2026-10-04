@@ -1,0 +1,12 @@
+=== full_concat - TEST SET ===
+Accuracy: 99.06%   AUC (macro OvR): 0.9998
+class       precision     recall         f1  support
+broadleaf        0.98       1.00       0.99      239
+grass            1.00       0.97       0.99      240
+soil             1.00       1.00       1.00      240
+soybean          1.00       0.99       0.99      240
+Confusion matrix (rows=true, cols=pred), order = broadleaf, grass, soil, soybean
+    239     0     0     0
+      4   234     1     1
+      0     0   240     0
+      2     1     0   237
