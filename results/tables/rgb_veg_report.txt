@@ -1,0 +1,12 @@
+=== rgb_veg - TEST SET ===
+Accuracy: 93.01%   AUC (macro OvR): 0.9897
+class       precision     recall         f1  support
+broadleaf        0.87       0.93       0.90      239
+grass            0.89       0.87       0.88      240
+soil             1.00       1.00       1.00      240
+soybean          0.97       0.93       0.95      240
+Confusion matrix (rows=true, cols=pred), order = broadleaf, grass, soil, soybean
+    223    15     0     1
+     25   208     1     6
+      0     1   239     0
+      8    10     0   222
